@@ -13,11 +13,24 @@ import (
 )
 
 func main() {
-	url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType=NIFTY%20BANK&fromDate=02-12-2020&toDate=22-02-2021"
-	call(url, "GET")
+
+	nfIndices := []string{"NIFTY%20BANK","NIFTY%20CONSUMER%20DURABLES","NIFTY%20AUTO",
+	"NIFTY%20FIN%20SERVICE","NIFTY%20FINSRV25%2050","NIFTY%20FMCG",
+	"NIFTY%20Healthcare%20Index","NIFTY%20IT","NIFTY%20MEDIA","NIFTY%20METAL",
+	"NIFTY%20OIL%20%26%20GAS","NIFTY%20PHARMA","NIFTY%20PVT%20BANK",
+	"NIFTY%20PSU%20BANK","NIFTY%20REALTY",
+	}
+
+	frDate := "02-12-2020"
+	toDate := "22-02-2021"
+
+	for _, v := range nfIndices {
+		url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType="+v+"&fromDate="+frDate+"&toDate="+toDate
+		call(url, "GET", v)
+	}
 }
 
-func call(url string, method string) {
+func call(url string, method string, name string) {
 	var headings, row []string
 	var rows [][]string
 
@@ -105,7 +118,7 @@ func call(url string, method string) {
 	}
 
     // Save spreadsheet by the given path.
-    if err := f.SaveAs("Book1.xlsx"); err != nil {
+    if err := f.SaveAs(name + ".xlsx"); err != nil {
         fmt.Println(err)
     }
 	
