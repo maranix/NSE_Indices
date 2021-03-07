@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/360EntSecGroup-Skylar/excelize/v2"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -57,22 +60,53 @@ func call(url string, method string) {
 		})
 	})
 
-	// fmt.Println("####### headings = ", len(headings), headings)
+	// Filter empty rows.
+	var rows_filtered [][]string
+	for i := 0 ; i < len(rows)-1 ; i++ {
+		if rows[i] != nil {
+			rows_filtered = append(rows_filtered, rows[i])
+		}
+	}
 
-	// f := excelize.NewFile()
-	// f.SetCellValue("Sheet1", "A1", headings[0])
-    // // Save spreadsheet by the given path.
-    // if err := f.SaveAs("Book1.xlsx"); err != nil {
-    //     fmt.Println(err)
-    // }
-
-	fmt.Println("####### rows = ", len(rows), rows)
+	// Heading
+	head := headings[0]
 	
+	// Period
+	period := headings[1]
 
-	// bytes, err := ioutil.ReadAll(res.Body)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// Columns
+	var col_map = map[string]string{}
 
-	// log.Println(string(bytes))
+	for i, c := range headings[2:] {
+		col_map[string(65+i)+strconv.Itoa(3)] = c
+	}
+
+	// Rows
+	var rows_map = map[string]string{}
+
+	for i := 0; i < len(rows_filtered); i++ {
+		r := strings.Join(rows_filtered[i], ",")
+		e := strings.Split(r, ",")
+		for cn, v := range e {
+				rows_map[string(65+cn)+strconv.Itoa(4+i)] = strings.Trim(v, " ")
+		}
+	}
+
+	f := excelize.NewFile()
+	f.SetCellValue("Sheet1", "A1", head)
+	f.SetCellValue("Sheet1", "A2", period)
+
+	for k, v := range col_map {
+		f.SetCellValue("Sheet1", k, v)
+	}
+
+	for k, v := range rows_map {
+		f.SetCellValue("Sheet1", k, v)
+	}
+
+    // Save spreadsheet by the given path.
+    if err := f.SaveAs("Book1.xlsx"); err != nil {
+        fmt.Println(err)
+    }
+	
 }
