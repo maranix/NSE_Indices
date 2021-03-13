@@ -81,17 +81,15 @@ func call(url string, method string, name string) {
 		}
 	}
 
-	// Heading
-	head := headings[0]
-	
-	// Period
-	period := headings[1]
-
 	// Columns
 	var col_map = map[string]string{}
 
-	for i, c := range headings[2:] {
-		col_map[string(65+i)+strconv.Itoa(3)] = c
+	for i, c := range headings {
+		if i<2 {
+			col_map[string(65)+strconv.Itoa(i+1)] = c
+		} else {
+		col_map[string(65+i-2)+strconv.Itoa(3)] = c
+		}
 	}
 
 	// Rows
@@ -106,8 +104,6 @@ func call(url string, method string, name string) {
 	}
 
 	f := excelize.NewFile()
-	f.SetCellValue("Sheet1", "A1", head)
-	f.SetCellValue("Sheet1", "A2", period)
 
 	for k, v := range col_map {
 		f.SetCellValue("Sheet1", k, v)
