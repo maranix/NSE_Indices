@@ -21,8 +21,8 @@ func main() {
 	"NIFTY%20PSU%20BANK","NIFTY%20REALTY",
 	}
 
-	frDate := "02-12-2020"
-	toDate := "22-02-2021"
+	frDate := "23-01-2021"
+	toDate := "23-04-2021"
 
 	for _, v := range nfIndices {
 		url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType="+v+"&fromDate="+frDate+"&toDate="+toDate
@@ -86,9 +86,9 @@ func call(url string, method string, name string) {
 
 	for i, c := range headings {
 		if i<2 {
-			col_map[string(65)+strconv.Itoa(i+1)] = c
+			col_map[string(rune(65))+strconv.Itoa(i+1)] = c
 		} else {
-		col_map[string(65+i-2)+strconv.Itoa(3)] = c
+		col_map[string(rune(65+i-2))+strconv.Itoa(3)] = c
 		}
 	}
 
@@ -99,18 +99,24 @@ func call(url string, method string, name string) {
 		r := strings.Join(rows_filtered[i], ",")
 		e := strings.Split(r, ",")
 		for cn, v := range e {
-				rows_map[string(65+cn)+strconv.Itoa(4+i)] = strings.Trim(v, " ")
+				rows_map[string(rune(65+cn))+strconv.Itoa(4+i)] = strings.Trim(v, " ")
 		}
 	}
 
 	f := excelize.NewFile()
 
 	for k, v := range col_map {
-		f.SetCellValue("Sheet1", k, v)
+		err := f.SetCellValue("Sheet1", k, v)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	for k, v := range rows_map {
-		f.SetCellValue("Sheet1", k, v)
+		err := f.SetCellValue("Sheet1", k, v)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
     // Save spreadsheet by the given path.
