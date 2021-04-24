@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	nfIndices := []string{"NIFTY%20BANK","NIFTY%20CONSUMER%20DURABLES","NIFTY%20AUTO",
 	"NIFTY%20FIN%20SERVICE","NIFTY%20FINSRV25%2050","NIFTY%20FMCG",
 	"NIFTY%20Healthcare%20Index","NIFTY%20IT","NIFTY%20MEDIA","NIFTY%20METAL",
@@ -24,19 +23,45 @@ func main() {
 	frDate := "23-01-2021"
 	toDate := "23-04-2021"
 
+	ch := 1
+
+	var col_map map[string]string
+	var row_map map[string]string
+	f := excelize.NewFile()
+
 	for _, v := range nfIndices {
 		url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType="+v+"&fromDate="+frDate+"&toDate="+toDate
-		call(url, "GET", v)
+		col_map, row_map = call(url, ch, v)
+
+		for k, v := range col_map {
+			err := f.SetCellValue("Sheet1", k, v)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		for k, v := range row_map {
+			err := f.SetCellValue("Sheet1", k, v)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// Save spreadsheet by the given path.
+		if err := f.SaveAs("indiceHistory.xlsx"); err != nil {
+			fmt.Println(err)
+		}
+		ch += 11
 	}
 }
 
-func call(url string, method string, name string) {
+func call(url string, ch int, name string) (map[string]string, map[string]string) {
 	var headings, row []string
 	var rows [][]string
 
 	client := &http.Client{Timeout: time.Second * 10,}
 
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println(err)
 	}
@@ -83,45 +108,28 @@ func call(url string, method string, name string) {
 
 	// Columns
 	var col_map = map[string]string{}
-
+	
 	for i, c := range headings {
 		if i<2 {
-			col_map[string(rune(65))+strconv.Itoa(i+1)] = c
+			col_name, _ := excelize.ColumnNumberToName(ch)
+			col_map[col_name+strconv.Itoa(i+1)] = c
 		} else {
-		col_map[string(rune(65+i-2))+strconv.Itoa(3)] = c
+			col_name, _ := excelize.ColumnNumberToName(ch+i-2)
+		col_map[col_name+strconv.Itoa(3)] = c
 		}
 	}
 
 	// Rows
 	var rows_map = map[string]string{}
-
+	
 	for i := 0; i < len(rows_filtered); i++ {
 		r := strings.Join(rows_filtered[i], ",")
 		e := strings.Split(r, ",")
 		for cn, v := range e {
-				rows_map[string(rune(65+cn))+strconv.Itoa(4+i)] = strings.Trim(v, " ")
+			col_name, _ := excelize.ColumnNumberToName(ch+cn)
+				rows_map[col_name+strconv.Itoa(4+i)] = strings.Trim(v, " ")
 		}
 	}
-
-	f := excelize.NewFile()
-
-	for k, v := range col_map {
-		err := f.SetCellValue("Sheet1", k, v)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	for k, v := range rows_map {
-		err := f.SetCellValue("Sheet1", k, v)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-    // Save spreadsheet by the given path.
-    if err := f.SaveAs(name + ".xlsx"); err != nil {
-        fmt.Println(err)
-    }
 	
+	return col_map, rows_map
 }
