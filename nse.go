@@ -1,5 +1,11 @@
 package main
 
+/*
+real    0m2.725s
+user    0m1.181s
+sys     0m0.410s
+*/
+
 import (
 	"fmt"
 	"log"
@@ -20,8 +26,8 @@ func main() {
 	"NIFTY%20PSU%20BANK","NIFTY%20REALTY",
 	}
 
-	frDate := "23-01-2021"
-	toDate := "23-04-2021"
+	frDate := "17-03-2021"
+	toDate := "17-06-2021"
 
 	ch := 1
 
@@ -48,7 +54,7 @@ func main() {
 		}
 
 		// Save spreadsheet by the given path.
-		if err := f.SaveAs("indiceHistory.xlsx"); err != nil {
+		if err := f.SaveAs("IndiciesHistoricaldata.xlsx"); err != nil {
 			fmt.Println(err)
 		}
 		ch += 11
