@@ -26,8 +26,10 @@ func main() {
 	"NIFTY%20PSU%20BANK","NIFTY%20REALTY",
 	}
 
-	frDate := "17-03-2021"
-	toDate := "17-06-2021"
+	timedt := time.Now()
+    	toDate := timedt.Format("02-01-2006")
+    	after := timedt.AddDate(0, 0, -90)
+    	frDate := after.Format("02-01-2006")
 
 	ch := 1
 
