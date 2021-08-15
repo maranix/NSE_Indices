@@ -14,22 +14,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/xuri/excelize/v2"
 )
 
 func main() {
-	nfIndices := []string{"NIFTY%20BANK","NIFTY%20CONSUMER%20DURABLES","NIFTY%20AUTO",
-	"NIFTY%20FIN%20SERVICE","NIFTY%20FINSRV25%2050","NIFTY%20FMCG",
-	"NIFTY%20Healthcare%20Index","NIFTY%20IT","NIFTY%20MEDIA","NIFTY%20METAL",
-	"NIFTY%20OIL%20%26%20GAS","NIFTY%20PHARMA","NIFTY%20PVT%20BANK",
-	"NIFTY%20PSU%20BANK","NIFTY%20REALTY",
+	nfIndices := []string{"NIFTY%20BANK", "NIFTY%20CONSUMER%20DURABLES", "NIFTY%20AUTO",
+		"NIFTY%20FIN%20SERVICE", "NIFTY%20FINSRV25%2050", "NIFTY%20FMCG",
+		"NIFTY%20Healthcare%20Index", "NIFTY%20IT", "NIFTY%20MEDIA", "NIFTY%20METAL",
+		"NIFTY%20OIL%20%26%20GAS", "NIFTY%20PHARMA", "NIFTY%20PVT%20BANK",
+		"NIFTY%20PSU%20BANK", "NIFTY%20REALTY",
 	}
 
 	timedt := time.Now()
-    	toDate := timedt.Format("02-01-2006")
-    	after := timedt.AddDate(0, 0, -90)
-    	frDate := after.Format("02-01-2006")
+	toDate := timedt.Format("02-01-2006")
+	after := timedt.AddDate(0, 0, -90)
+	frDate := after.Format("02-01-2006")
 
 	ch := 1
 
@@ -38,7 +38,7 @@ func main() {
 	f := excelize.NewFile()
 
 	for _, v := range nfIndices {
-		url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType="+v+"&fromDate="+frDate+"&toDate="+toDate
+		url := "https://www1.nseindia.com/products/dynaContent/equities/indices/historicalindices.jsp?indexType=" + v + "&fromDate=" + frDate + "&toDate=" + toDate
 		col_map, row_map = call(url, ch, v)
 
 		for k, v := range col_map {
@@ -67,7 +67,7 @@ func call(url string, ch int, name string) (map[string]string, map[string]string
 	var headings, row []string
 	var rows [][]string
 
-	client := &http.Client{Timeout: time.Second * 10,}
+	client := &http.Client{Timeout: time.Second * 10}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -83,10 +83,17 @@ func call(url string, ch int, name string) (map[string]string, map[string]string
 		log.Fatal(err)
 	}
 
-	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Fatalf("StatusCode error: %v\n\nTrying again....", res.StatusCode)
+	} else {
+		log.Println("Contact OK! CODE: ", res.StatusCode)
+	}
+
 	if res.StatusCode != 200 {
 		log.Fatalf("StatusCode error: %v", res.StatusCode)
 	}
+
+	defer res.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
@@ -108,7 +115,7 @@ func call(url string, ch int, name string) (map[string]string, map[string]string
 
 	// Filter empty rows.
 	var rows_filtered [][]string
-	for i := 0 ; i < len(rows)-1 ; i++ {
+	for i := 0; i < len(rows)-1; i++ {
 		if rows[i] != nil {
 			rows_filtered = append(rows_filtered, rows[i])
 		}
@@ -116,28 +123,28 @@ func call(url string, ch int, name string) (map[string]string, map[string]string
 
 	// Columns
 	var col_map = map[string]string{}
-	
+
 	for i, c := range headings {
-		if i<2 {
+		if i < 2 {
 			col_name, _ := excelize.ColumnNumberToName(ch)
 			col_map[col_name+strconv.Itoa(i+1)] = c
 		} else {
-			col_name, _ := excelize.ColumnNumberToName(ch+i-2)
-		col_map[col_name+strconv.Itoa(3)] = c
+			col_name, _ := excelize.ColumnNumberToName(ch + i - 2)
+			col_map[col_name+strconv.Itoa(3)] = c
 		}
 	}
 
 	// Rows
 	var rows_map = map[string]string{}
-	
+
 	for i := 0; i < len(rows_filtered); i++ {
 		r := strings.Join(rows_filtered[i], ",")
 		e := strings.Split(r, ",")
 		for cn, v := range e {
-			col_name, _ := excelize.ColumnNumberToName(ch+cn)
-				rows_map[col_name+strconv.Itoa(4+i)] = strings.Trim(v, " ")
+			col_name, _ := excelize.ColumnNumberToName(ch + cn)
+			rows_map[col_name+strconv.Itoa(4+i)] = strings.Trim(v, " ")
 		}
 	}
-	
+
 	return col_map, rows_map
 }
